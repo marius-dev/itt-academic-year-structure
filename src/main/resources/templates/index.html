@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <title>Compiler</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://raw.githubusercontent.com/enyo/dropzone/master/dist/dropzone.js"></script>
+
+    <style>
+
+    </style>
+  </head>
+  <body>
+
+  <form class="dropzone" id="json-ay-dropzone">
+
+  </form>
+
+
+      <script>
+          	$('#encJs').linedtextarea(
+				{selectedLine: 1}
+			);
+
+			$("#compile-button").click(function(){
+
+		  		var textAreaContent = $("#encJs").val();
+
+
+				var settings = {
+				  "async": true,
+				  "crossDomain": true,
+				  "url": "http://localhost:8080/compile",
+				  "method": "POST",
+				  "headers": {
+				    "content-type": "text/plain",
+				    "cache-control": "no-cache"
+				  },
+				  "data": textAreaContent
+				};
+
+				var request = 	$.ajax(settings);
+
+				request.done(function(msg) {
+				    console.log(msg);
+                    var element = $(
+                        '<div class="alert success">'+
+                            '<span class="closebtn">&times;</span>'+
+                            '<strong>Totul pare in regula!</strong>.'+
+                        '</div>'
+                    );
+                    $('.notification-area').html(element);
+
+                    $(".closebtn").click(function(event) {
+                        event.preventDefault();
+                        $(this).parent().remove();
+                    });
+				});
+
+				request.fail(function(jqXHR, textStatus) {
+				  var result = JSON.parse(jqXHR.responseText);
+				  if(result.constructor === Array){
+                      var elements = $();
+                      result.forEach(function (p1) {
+                          elements = elements.add(
+                              '<div class="alert warning">'+
+                                  '<span class="closebtn"> &times;</span>'+
+                              '<strong>Warning!</strong> '+p1+
+                              '</div>'
+                          );
+                      });
+                      $('.notification-area').html(elements);
+                      $(".closebtn").click(function(event) {
+                          event.preventDefault();
+                          $(this).parent().remove();
+                      })
+                  }else {
+                      alert(jqXHR.responseText);
+                  }
+				});
+			});
+
+            function displayDemo() {
+                var settings = {
+                    "async": true,
+                    "crossDomain": true,
+                    "url": "http://localhost:8080/get_file",
+                    "method": "GET",
+                    "headers": {
+                        "content-type": "text/plain",
+                        "cache-control": "no-cache"
+                    }
+                };
+
+                $.ajax(settings).done(function (response) {
+                    $("#encJs").val(response);
+                });
+            }
+
+            $( document ).ready(function() {
+                displayDemo();
+            });
+
+      </script>
+  </body>
+</html>
