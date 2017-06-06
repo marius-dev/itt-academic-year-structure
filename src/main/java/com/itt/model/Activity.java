@@ -18,8 +18,6 @@ public class Activity {
 
     private String activityType;
 
-    private Integer numberOfWeeks;
-
     @Embedded
     private Period period;
 

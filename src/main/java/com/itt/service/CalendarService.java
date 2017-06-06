@@ -89,7 +89,7 @@ public class CalendarService {
         Activity activity = this.activityDao.getOneForDateAndGroup(date, activityGroup);
 
         if(activity == null){
-            throw new NotFoundException("No activity was founded on this date" + date.toString());
+            throw new NotFoundException("No activity was founded on this date" + date + " was not found");
         }
 
         List<Activity> activities = this.activityDao.getAllWithGroup(activityGroup);
@@ -99,12 +99,27 @@ public class CalendarService {
         Integer weekNumber = 0;
 
         for (Activity tmpActivity: activities) {
-            if(tmpActivity.getPeriod().getEndDate().compareTo(date) < 0){
+            Integer startDateComparision = tmpActivity.getPeriod().getStartDate().compareTo(date);
+            Integer endDatecomparision = tmpActivity.getPeriod().getEndDate().compareTo(date);
+
+            if(endDatecomparision < 0){
+
                 if(tmpActivity.getActivityType().equals("PREDARE")) {
                     weekNumber += tmpActivity.getPeriod().getNumberOfWeeks();
                 }
-            }else{
+
+            } else {
+
+                if(!tmpActivity.getActivityType().equals("PREDARE")) {
+                    break;
+                }
+
                 weekNumber += dateUtilService.getWeeksBetween(tmpActivity.getPeriod().getStartDate(), date);
+
+                if((date.getDay() - tmpActivity.getPeriod().getStartDate().getDay()) % 7 == 0){
+                    weekNumber +=1;
+                }
+
                 break;
             }
         }

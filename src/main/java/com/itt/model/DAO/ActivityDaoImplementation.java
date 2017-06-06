@@ -23,9 +23,12 @@ public class ActivityDaoImplementation extends BasicDAO<Activity, ObjectId> impl
     public Activity getOneForDateAndGroup(Date date, ActivityGroup activityGroup) {
         Query<Activity> query = createQuery();
 
-        query.field("period.startDate").lessThan(date);
-        query.field("period.startDate").lessThan(date);
-        query.field("activityGroup").equal(activityGroup);
+        query.and(
+            query.criteria("period.startDate").lessThanOrEq(date),
+            query.criteria("period.endDate").greaterThanOrEq(date),
+            query.criteria("activityGroup").equal(activityGroup)
+        );
+
 
         return query.get();
     }
