@@ -45,8 +45,6 @@ public class CalendarController {
 
             DBObject result = this.calendarService.getWeekNumber(
                     (String)  data.get("date"),
-                    (String)  data.get("academic_year"),
-                    (Integer) data.get("semester"),
                     (Integer) data.get("year_of_study"),
                     (String)  data.get("specialization")
             );

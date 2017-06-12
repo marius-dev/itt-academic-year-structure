@@ -6,6 +6,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.dao.DAO;
 
 import java.net.HttpRetryException;
+import java.util.Date;
 
 
 public interface ActivityGroupDao extends DAO<ActivityGroup, ObjectId>{

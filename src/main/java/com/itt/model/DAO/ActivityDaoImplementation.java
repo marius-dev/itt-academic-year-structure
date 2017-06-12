@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.List;
 
 
-public class ActivityDaoImplementation extends BasicDAO<Activity, ObjectId> implements ActivityDao{
+public class ActivityDaoImplementation extends BasicDAO<Activity, ObjectId> implements ActivityDao {
 
     public ActivityDaoImplementation(Class<Activity> entityClass, Datastore ds) {
         super(entityClass, ds);
@@ -29,6 +29,18 @@ public class ActivityDaoImplementation extends BasicDAO<Activity, ObjectId> impl
             query.criteria("activityGroup").equal(activityGroup)
         );
 
+
+        return query.get();
+    }
+
+    @Override
+    public Activity getOneForDate(Date date) {
+        Query<Activity> query = createQuery();
+
+        query.and(
+                query.criteria("period.startDate").lessThanOrEq(date),
+                query.criteria("period.endDate").greaterThanOrEq(date)
+        );
 
         return query.get();
     }

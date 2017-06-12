@@ -69,16 +69,18 @@ public class CalendarService {
     }
 
 
-    public DBObject getWeekNumber(String dateAsString, String academicYearAsString, Integer semesterNumber,  Integer yearOfStudy, String specialization) throws ParseException, NotFoundException, HttpRetryException {
+    public DBObject getWeekNumber(String dateAsString, Integer yearOfStudy, String specialization) throws ParseException, NotFoundException, HttpRetryException {
         Date date = this.getDateFromString(dateAsString);
 
-        AcademicYear academicYear = academicYearDao.getOneByName(academicYearAsString);
 
-        if(academicYear == null){
-            throw new NotFoundException("Academic year with name:" + academicYearAsString + " was not found");
+
+        Activity activityTmp = this.activityDao.getOneForDate(date);
+
+        if(activityTmp == null){
+            throw new NotFoundException("No activity was founded on this period");
         }
 
-        Semester semester = this.semesterDao.findOneByNumber(semesterNumber, academicYear);
+        Semester semester = activityTmp.getActivityGroup().getSemester();
 
         ActivityGroup activityGroup = this.activityGroupDao.findBySemesterYearOfStudyAndSpecialization(
                 semester,
