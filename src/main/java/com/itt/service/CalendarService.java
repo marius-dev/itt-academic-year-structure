@@ -69,7 +69,7 @@ public class CalendarService {
     }
 
 
-    public Integer getWeekNumber(String dateAsString, String academicYearAsString, Integer semesterNumber,  Integer yearOfStudy, String specialization) throws ParseException, NotFoundException, HttpRetryException {
+    public DBObject getWeekNumber(String dateAsString, String academicYearAsString, Integer semesterNumber,  Integer yearOfStudy, String specialization) throws ParseException, NotFoundException, HttpRetryException {
         Date date = this.getDateFromString(dateAsString);
 
         AcademicYear academicYear = academicYearDao.getOneByName(academicYearAsString);
@@ -124,7 +124,11 @@ public class CalendarService {
             }
         }
 
-        return weekNumber;
+        DBObject object = new BasicDBObject();
+        object.put("weekNumber", weekNumber);
+        object.put("activity", activity);
+
+        return object;
     }
 
     private void setAndSaveSubFieldsForSemester(DBObject calendar, Semester semester) throws ParseException {

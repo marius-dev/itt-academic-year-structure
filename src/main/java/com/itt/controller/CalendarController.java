@@ -2,6 +2,7 @@ package com.itt.controller;
 
 import com.itt.service.CalendarService;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import com.mongodb.util.JSON;
 import javassist.NotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +43,7 @@ public class CalendarController {
 
             BasicDBObject data = (BasicDBObject) JSON.parse(dataAsJson);
 
-            Integer result = this.calendarService.getWeekNumber(
+            DBObject result = this.calendarService.getWeekNumber(
                     (String)  data.get("date"),
                     (String)  data.get("academic_year"),
                     (Integer) data.get("semester"),
