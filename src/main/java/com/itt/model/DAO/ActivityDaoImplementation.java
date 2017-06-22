@@ -45,6 +45,18 @@ public class ActivityDaoImplementation extends BasicDAO<Activity, ObjectId> impl
         return query.get();
     }
 
+    @Override
+    public List<Activity> getAllForDate(Date date) {
+        Query<Activity> query = createQuery();
+
+        query.and(
+                query.criteria("period.startDate").lessThanOrEq(date),
+                query.criteria("period.endDate").greaterThanOrEq(date)
+        );
+
+        return query.asList();
+    }
+
     public List<Activity> getAllWithGroup(ActivityGroup activityGroup) {
         Query<Activity> query = createQuery();
 

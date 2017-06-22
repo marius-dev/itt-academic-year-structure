@@ -17,5 +17,7 @@ public interface ActivityDao extends DAO<Activity, ObjectId>{
 
     public Activity getOneForDate(Date date);
 
+    public List<Activity> getAllForDate(Date date);
+
     public List<Activity> getAllWithGroup(ActivityGroup activityGroup);
 }

@@ -4,6 +4,7 @@ import com.itt.model.*;
 import com.itt.model.DAO.*;
 import com.mongodb.*;
 import com.mongodb.util.JSON;
+import javafx.util.Pair;
 import javassist.NotFoundException;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
@@ -13,7 +14,9 @@ import org.springframework.stereotype.Service;
 import java.net.HttpRetryException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -41,7 +44,7 @@ public class CalendarService {
 
         DBObject dbObject = (DBObject) JSON.parse(jsonCalendar);
 
-        AcademicYear academicYear= new AcademicYear();
+        AcademicYear academicYear = new AcademicYear();
         academicYear.setYears((String) dbObject.get("years"));
         Key academicYearId = academicYearDao.save(academicYear);
         academicYear.setObjectId((ObjectId) academicYearId.getId());
@@ -68,15 +71,12 @@ public class CalendarService {
         this.setAndSaveSubFieldsForSemester(dbObject, semester2);
     }
 
-
     public DBObject getWeekNumber(String dateAsString, Integer yearOfStudy, String specialization) throws ParseException, NotFoundException, HttpRetryException {
         Date date = this.getDateFromString(dateAsString);
 
-
-
         Activity activityTmp = this.activityDao.getOneForDate(date);
 
-        if(activityTmp == null){
+        if (activityTmp == null) {
             throw new NotFoundException("No activity was founded on this period");
         }
 
@@ -90,7 +90,51 @@ public class CalendarService {
 
         Activity activity = this.activityDao.getOneForDateAndGroup(date, activityGroup);
 
-        if(activity == null){
+        Integer weekNumber = this.calculateWeekNumberByActivity(activity, date);
+
+        DBObject object = new BasicDBObject();
+        object.put("weekNumber", weekNumber);
+        object.put("activity", activity);
+
+        return object;
+    }
+
+    /**
+     * @param dateAsString
+     * @return BasicDBObject
+     * @throws ParseException
+     * @throws NotFoundException
+     * @throws HttpRetryException
+     */
+    public DBObject getWeekNumber(String dateAsString) throws ParseException, NotFoundException, HttpRetryException {
+        Date date = this.getDateFromString(dateAsString);
+
+        List<Activity> activityTmpList = this.activityDao.getAllForDate(date);
+
+        if (activityTmpList.isEmpty()) {
+            throw new NotFoundException("No activities were founded on this period");
+        }
+
+        List<BasicDBObject> weekNumbers = new ArrayList<>();
+
+        for (Activity act : activityTmpList) {
+            BasicDBObject obj = new BasicDBObject();
+            obj.put("weekNumber", this.calculateWeekNumberByActivity(act, date));
+            obj.put("activity", act);
+
+            weekNumbers.add(obj);
+        }
+
+
+        return new BasicDBObject("data", weekNumbers);
+    }
+
+    private Integer calculateWeekNumberByActivity(Activity imputActivity, Date date) throws NotFoundException {
+
+        ActivityGroup activityGroup = imputActivity.getActivityGroup();
+        Activity activity = this.activityDao.getOneForDateAndGroup(date, activityGroup);
+
+        if (activity == null) {
             throw new NotFoundException("No activity was founded on this date" + date + " was not found");
         }
 
@@ -100,53 +144,49 @@ public class CalendarService {
 
         Integer weekNumber = 0;
 
-        for (Activity tmpActivity: activities) {
+        for (Activity tmpActivity : activities) {
             Integer startDateComparision = tmpActivity.getPeriod().getStartDate().compareTo(date);
             Integer endDatecomparision = tmpActivity.getPeriod().getEndDate().compareTo(date);
 
-            if(endDatecomparision < 0){
+            if (endDatecomparision < 0) {
 
-                if(tmpActivity.getActivityType().equals("PREDARE")) {
+                if (tmpActivity.getActivityType().equals("PREDARE")) {
                     weekNumber += tmpActivity.getPeriod().getNumberOfWeeks();
                 }
 
             } else {
 
-                if(!tmpActivity.getActivityType().equals("PREDARE")) {
+                if (!tmpActivity.getActivityType().equals("PREDARE")) {
                     break;
                 }
 
                 weekNumber += dateUtilService.getWeeksBetween(tmpActivity.getPeriod().getStartDate(), date);
 
-                if((date.getDay() - tmpActivity.getPeriod().getStartDate().getDay()) % 7 == 0){
-                    weekNumber +=1;
+                if ((date.getDay() - tmpActivity.getPeriod().getStartDate().getDay()) % 7 == 0) {
+                    weekNumber += 1;
                 }
 
                 break;
             }
         }
 
-        DBObject object = new BasicDBObject();
-        object.put("weekNumber", weekNumber);
-        object.put("activity", activity);
-
-        return object;
+        return weekNumber;
     }
 
     private void setAndSaveSubFieldsForSemester(DBObject calendar, Semester semester) throws ParseException {
-        for (Object object: ((BasicDBList)((BasicDBObject) calendar.get(semester.getKey())).get("grupuri"))) {
+        for (Object object : ((BasicDBList) ((BasicDBObject) calendar.get(semester.getKey())).get("grupuri"))) {
             ActivityGroup activityGroup = new ActivityGroup();
             activityGroup.setSemester(semester);
 
-            BasicDBObject as = (BasicDBObject)((BasicDBObject )object).get("anul_studii");
+            BasicDBObject as = (BasicDBObject) ((BasicDBObject) object).get("anul_studii");
 
             YearOfStudy yearOfStudy = new YearOfStudy();
 
-            for (Object licenseYear: (BasicDBList)as.get("licenta")) {
+            for (Object licenseYear : (BasicDBList) as.get("licenta")) {
                 yearOfStudy.getLicense().add((Integer) licenseYear);
             }
 
-            for (Object masterYear: (BasicDBList)as.get("master")) {
+            for (Object masterYear : (BasicDBList) as.get("master")) {
                 yearOfStudy.getMaster().add((Integer) masterYear);
             }
 
@@ -156,10 +196,10 @@ public class CalendarService {
                     (ObjectId) activityGroupDao.save(activityGroup).getId()
             );
 
-            for (Object data: (BasicDBList) ((BasicDBObject )object).get("lista_activitati")) {
+            for (Object data : (BasicDBList) ((BasicDBObject) object).get("lista_activitati")) {
 
                 String startDateAsString = (String) ((BasicDBObject) ((BasicDBObject) data).get("perioada")).get("inceput");
-                String endDateAsString  = (String) ((BasicDBObject) ((BasicDBObject) data).get("perioada")).get("sfarsit");
+                String endDateAsString = (String) ((BasicDBObject) ((BasicDBObject) data).get("perioada")).get("sfarsit");
                 Integer weeksNumber = (Integer) ((BasicDBObject) ((BasicDBObject) data).get("perioada")).get("nr_saptamani");
 
                 Activity activity = new Activity(
@@ -179,6 +219,6 @@ public class CalendarService {
     }
 
     private Date getDateFromString(String date) throws ParseException {
-         return  new SimpleDateFormat("dd-MM-yyyy").parse(date);
+        return new SimpleDateFormat("dd-MM-yyyy").parse(date);
     }
 }

@@ -38,7 +38,7 @@ public class CalendarController {
 
     @RequestMapping(value = "/get-week-by-date", method= RequestMethod.POST)
     public @ResponseBody
-    ResponseEntity getWeekByDateAction(@RequestBody String dataAsJson) {
+    ResponseEntity getWeekByDatSyearAndSpecializationeAction(@RequestBody String dataAsJson) {
         try {
 
             BasicDBObject data = (BasicDBObject) JSON.parse(dataAsJson);
@@ -56,12 +56,35 @@ public class CalendarController {
         } catch (NotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         } catch (HttpRetryException e) {
-            return new ResponseEntity<>(e.getMessage(),HttpStatus.valueOf(e.responseCode()));
+            return new ResponseEntity<>(e.getMessage() + "test" ,HttpStatus.valueOf(e.responseCode()));
+        }
+    }
+
+    @RequestMapping(value = "/activities-by-date", method= RequestMethod.POST)
+    public @ResponseBody
+    ResponseEntity getWeekByDateAction(@RequestBody String dataAsJson) {
+        try {
+
+            BasicDBObject data = (BasicDBObject) JSON.parse(dataAsJson);
+
+            DBObject result = this.calendarService.getWeekNumber(
+                    (String)  data.get("date")
+            );
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+
+        } catch (ParseException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+        } catch (NotFoundException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+        } catch (HttpRetryException e) {
+            return new ResponseEntity<>(e.getMessage() + "test" ,HttpStatus.valueOf(e.responseCode()));
         }
     }
 
 
-        @RequestMapping("/get_file")
+
+    @RequestMapping("/get_file")
     public ResponseEntity<String> getFileContent() {
           return ResponseEntity.status(HttpStatus.CONFLICT).body("eee");
     }
