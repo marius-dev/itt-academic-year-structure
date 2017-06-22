@@ -4,7 +4,6 @@ import com.itt.model.*;
 import com.itt.model.DAO.*;
 import com.mongodb.*;
 import com.mongodb.util.JSON;
-import javafx.util.Pair;
 import javassist.NotFoundException;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.Key;
@@ -16,7 +15,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 
 @Service
@@ -92,11 +90,11 @@ public class CalendarService {
 
         Integer weekNumber = this.calculateWeekNumberByActivity(activity, date);
 
-        DBObject object = new BasicDBObject();
-        object.put("weekNumber", weekNumber);
-        object.put("activity", activity);
+        DBObject retData = new BasicDBObject();
+        retData.put("weekNumber", weekNumber);
+        retData.put("activity", activity);
 
-        return object;
+        return retData;
     }
 
     /**
@@ -130,6 +128,10 @@ public class CalendarService {
     }
 
     private Integer calculateWeekNumberByActivity(Activity imputActivity, Date date) throws NotFoundException {
+
+        if (imputActivity == null) {
+            throw new NotFoundException("No activity were founded on this period");
+        }
 
         ActivityGroup activityGroup = imputActivity.getActivityGroup();
         Activity activity = this.activityDao.getOneForDateAndGroup(date, activityGroup);
